@@ -1,0 +1,30 @@
+<%- include('../partials/header', { title: 'Login' }) %>
+
+<main class="page-form">
+  <div class="form-header">
+    <a href="/" class="back-link">← Back to Index</a>
+    <h1 class="form-title reveal-line">Sign<br><span class="accent-line">In<span class="dot">.</span></span></h1>
+    <p class="form-sub reveal-fade delay-1">Welcome back.</p>
+  </div>
+
+  <% if (error) { %>
+    <div class="form-error reveal-fade"><span>!</span> <%= error %></div>
+  <% } %>
+
+  <form action="/auth/login" method="POST" class="post-form reveal-fade delay-2">
+    <div class="form-group">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password" />
+    </div>
+    <div class="form-actions">
+      <a href="/auth/signup" class="btn-outline">Create account</a>
+      <button type="submit" class="btn-primary">Sign In →</button>
+    </div>
+  </form>
+</main>
+
+<%- include('../partials/footer') %>

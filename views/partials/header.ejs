@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' ? title + ' — BLCK.BLOG' : 'BLCK.BLOG' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">BLCK.<span>BLOG</span></a>
+    <nav class="nav">
+      <a href="/" class="nav-link">Index</a>
+      <a href="/posts/new" class="nav-link">Write</a>
+      <% if (typeof user !== 'undefined' && user) { %>
+        <span class="nav-user"><%= user.displayName %><% if (user.role === 'admin') { %><span class="nav-badge">admin</span><% } %></span>
+        <form action="/auth/logout" method="POST" class="nav-logout-form">
+          <button class="nav-link nav-logout-btn">Logout</button>
+        </form>
+      <% } else { %>
+        <a href="/auth/login" class="nav-link">Login</a>
+        <a href="/auth/signup" class="nav-cta">
+          <span class="cta-label">Sign Up</span>
+          <span class="cta-arrow">→</span>
+        </a>
+      <% } %>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="/" class="mobile-link">Index</a>
+    <a href="/posts/new" class="mobile-link">Write</a>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <span class="mobile-link"><%= user.displayName %><% if (user.role === 'admin') { %> (admin)<% } %></span>
+      <form action="/auth/logout" method="POST">
+        <button class="mobile-link accent" style="width:100%;text-align:left;border:none;background:none;font-family:inherit;cursor:pointer;">Logout →</button>
+      </form>
+    <% } else { %>
+      <a href="/auth/login" class="mobile-link">Login</a>
+      <a href="/auth/signup" class="mobile-link accent">Sign Up →</a>
+    <% } %>
+  </div>
+</header>

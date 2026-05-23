@@ -1,0 +1,110 @@
+<%- include('partials/header', { title: post.title }) %>
+
+<main class="page-post">
+
+  <div class="post-header">
+    <div class="post-header-inner">
+      <a href="/" class="back-link">← Back to Index</a>
+      <div class="post-meta-row">
+        <span class="tag"><%= post.category %></span>
+        <span class="tag"><%= post.readTime %> read</span>
+        <span class="tag"><%= formatDate(post.date) %></span>
+        <% if (post.author_name) { %>
+          <span class="tag">by <%= post.author_name %></span>
+        <% } %>
+      </div>
+      <h1 class="post-title reveal-line"><%= post.title %></h1>
+      <p class="post-excerpt reveal-fade delay-1"><%= post.excerpt %></p>
+    </div>
+    <div class="post-header-rule reveal-fade delay-2"></div>
+  </div>
+
+  <div class="post-layout">
+    <aside class="post-sidebar">
+      <% if (typeof user !== 'undefined' && user && canEdit) { %>
+      <div class="sidebar-actions">
+        <a href="/posts/<%= post.id %>/edit" class="btn-outline">Edit Post</a>
+        <% if (canDelete) { %>
+        <form action="/posts/<%= post.id %>/delete" method="POST" class="delete-form" id="deleteForm">
+          <button type="button" class="btn-danger" id="deleteBtn">Delete</button>
+        </form>
+        <% } %>
+      </div>
+      <% } %>
+      <div class="sidebar-info">
+        <div class="info-item">
+          <span class="info-label">Published</span>
+          <span class="info-val"><%= formatDate(post.date) %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Category</span>
+          <span class="info-val"><%= post.category %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Read time</span>
+          <span class="info-val"><%= post.readTime %></span>
+        </div>
+        <% if (post.author_name) { %>
+        <div class="info-item">
+          <span class="info-label">Author</span>
+          <span class="info-val"><%= post.author_name %></span>
+        </div>
+        <% } %>
+      </div>
+    </aside>
+
+    <article class="post-body-wrap">
+      <div class="post-body">
+        <% post.body.split('\n').forEach(para => { %>
+          <% if (para.trim()) { %>
+            <p><%= para %></p>
+          <% } %>
+        <% }) %>
+      </div>
+    </article>
+  </div>
+
+  <!-- Related Posts -->
+  <% if (others.length > 0) { %>
+  <section class="related-section">
+    <div class="section-header">
+      <h2 class="section-title">CONTINUE READING</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="related-grid">
+      <% others.forEach((p, i) => { %>
+      <article class="post-card" style="--i:<%= i %>">
+        <a href="/posts/<%= p.id %>" class="card-link">
+          <div class="card-top">
+            <span class="card-cat"><%= p.category %></span>
+          </div>
+          <h2 class="card-title"><%= p.title %></h2>
+          <p class="card-excerpt"><%= p.excerpt %></p>
+          <div class="card-footer">
+            <span class="card-date"><%= formatDate(p.date) %></span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
+      </article>
+      <% }) %>
+    </div>
+  </section>
+  <% } %>
+
+</main>
+
+<!-- Confirm Delete Modal -->
+<% if (typeof user !== 'undefined' && user && canDelete) { %>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <p class="modal-title">Delete this post?</p>
+    <p class="modal-sub">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-outline" id="modalCancel">Cancel</button>
+      <button class="btn-danger" id="modalConfirm">Delete →</button>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>
