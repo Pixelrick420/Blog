@@ -24,7 +24,7 @@ BEGIN
   INSERT INTO public.profiles (id, display_name, role)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1), 'Anonymous'),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1), 'Anonymous'),
     'user'
   );
   RETURN NEW;
@@ -56,6 +56,15 @@ CREATE TABLE posts (
 -- Index for listing posts sorted by date
 CREATE INDEX idx_posts_date ON posts (date DESC);
 
+-- ─── LIKES TABLE ───────────────────────────────────────────────────────────────
+
+CREATE TABLE likes (
+  post_id    UUID REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (post_id, user_id)
+);
+
 -- Auto-update updated_at on row modification
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER
@@ -73,26 +82,4 @@ CREATE TRIGGER posts_updated_at
   EXECUTE FUNCTION update_updated_at();
 
 -- ─── SEED DATA ────────────────────────────────────────────────────────────────
-
-INSERT INTO posts (title, category, excerpt, body, date) VALUES
-(
-  'The Architecture of Thought',
-  'Design',
-  'How structured thinking parallels industrial design — precision, repeatability, and clarity as cognitive tools.',
-  'In the same way an engineer designs a system with no tolerance for ambiguity, we can approach ideas as modular, testable, and composable units. The industrialized mind doesn''t leave room for entropy — it plans, measures, and iterates with discipline.\n\nThis is not rigidity. It is clarity. When you remove the noise, what remains is signal. A thought reduced to its essential components becomes universal, scalable, replicable.\n\nConsider how the Swiss grid system revolutionized typography. Not by eliminating creativity, but by giving it structure. Alignment is not a constraint — it is a foundation.',
-  '2026-04-12'
-),
-(
-  'Bold Systems Over Soft Choices',
-  'Strategy',
-  'Why committing to a strong aesthetic or process always outperforms cautious, hedged decisions.',
-  'Soft design is forgettable. Hedged strategy is indistinguishable. When you try to please everyone, you surprise no one.\n\nThe most resilient systems — architectural, industrial, typographic — share a trait: they commit. A primary color used boldly is more powerful than ten pastels used timidly. A single sans-serif typeface used with precision beats five fonts used haphazardly.\n\nThis applies to organizations, too. A company with a narrow, precise positioning cuts through markets. A company that tries to be everything becomes background noise.',
-  '2026-05-01'
-),
-(
-  'Lines, Not Curves',
-  'Aesthetics',
-  'A case for straight lines in design — the geometry of certainty in an uncertain world.',
-  'Curves seduce. Lines declare.\n\nThe straight line is the fastest route between two points. It implies intent. It suggests a mind that knows where it is going. In architecture, in typography, in product design — the line communicates discipline.\n\nNot every design needs to be soft. Not every edge needs rounding. There is a kind of beauty in the orthogonal that the curved form can never achieve: the beauty of a decision made completely.',
-  '2026-05-18'
-);
+-- Run `node backend/seed.js` to create a test user and sample posts.

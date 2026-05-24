@@ -50,14 +50,49 @@ window.addEventListener('scroll', () => {
   lastScroll = current;
 }, { passive: true });
 
+/* ─── QUILL EDITOR (form pages) ──────────────────────────────────────────────── */
+const editorEl = document.getElementById('editor-container');
+let quill = null;
+
+if (editorEl) {
+  quill = new Quill('#editor-container', {
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['blockquote', 'link'],
+        ['clean']
+      ]
+    },
+    theme: 'snow',
+    placeholder: 'Write with conviction…'
+  });
+
+  const form = document.querySelector('.post-form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      document.getElementById('body').value = quill.root.innerHTML;
+    });
+  }
+}
+
 /* ─── WORD COUNT (form pages) ────────────────────────────────────────────────── */
 const bodyTextarea = document.getElementById('body');
 const wordCountEl  = document.getElementById('wordCount');
 const readTimeEl   = document.getElementById('readTimeEst');
 
-if (bodyTextarea && wordCountEl && readTimeEl) {
+if (wordCountEl && readTimeEl) {
   function updateCount() {
-    const text = bodyTextarea.value.trim();
+    let text;
+    if (quill) {
+      text = quill.getText().trim();
+    } else if (bodyTextarea) {
+      text = bodyTextarea.value.trim();
+    } else {
+      return;
+    }
     const words = text ? text.split(/\s+/).length : 0;
     const mins  = Math.max(1, Math.ceil(words / 200));
     wordCountEl.textContent = `${words} word${words !== 1 ? 's' : ''}`;
@@ -65,8 +100,12 @@ if (bodyTextarea && wordCountEl && readTimeEl) {
     wordCountEl.classList.toggle('active', words > 0);
     readTimeEl.classList.toggle('active', words > 0);
   }
-  bodyTextarea.addEventListener('input', updateCount);
-  updateCount(); // run on load for edit page
+  if (quill) {
+    quill.on('text-change', updateCount);
+  } else if (bodyTextarea) {
+    bodyTextarea.addEventListener('input', updateCount);
+  }
+  updateCount();
 }
 
 /* ─── DELETE MODAL ───────────────────────────────────────────────────────────── */
@@ -99,6 +138,46 @@ if (deleteBtn && overlay) {
   });
 }
 
+/* ─── LIKE / SHARE ───────────────────────────────────────────────────────────── */
+const PIXEL_HEART = [0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,0,0,1,0,0];
+
+function setPixelHeart(container, liked) {
+  const pixels = container.querySelectorAll('.pixel');
+  pixels.forEach((p, i) => p.classList.toggle('on', liked && PIXEL_HEART[i]));
+}
+
+const likeBtn = document.querySelector('.like-btn');
+if (likeBtn) {
+  likeBtn.addEventListener('click', async function () {
+    const postId = this.dataset.postId;
+    try {
+      const res = await fetch(`/posts/${postId}/like`, { method: 'POST' });
+      const data = await res.json();
+      this.querySelector('.like-count').textContent = data.count;
+      setPixelHeart(this.querySelector('.pixel-heart'), data.liked);
+      this.classList.toggle('liked', data.liked);
+    } catch (_) {}
+  });
+}
+
+
+
+const shareBtn = document.querySelector('.share-btn');
+if (shareBtn) {
+  shareBtn.addEventListener('click', function () {
+    const url = window.location.origin + '/posts/' + this.dataset.id;
+    if (navigator.share) {
+      navigator.share({ url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        const orig = this.textContent;
+        this.textContent = 'Copied!';
+        setTimeout(() => { this.textContent = orig; }, 2000);
+      }).catch(() => {});
+    }
+  });
+}
+
 /* ─── SCROLL REVEAL ──────────────────────────────────────────────────────────── */
 // Animate post cards when they scroll into view
 const cards = document.querySelectorAll('.post-card');
@@ -119,8 +198,9 @@ if ('IntersectionObserver' in window && cards.length) {
 }
 
 /* ─── FORM INPUT INTERACTIONS ────────────────────────────────────────────────── */
-// Auto-grow textarea
+// Auto-grow textarea (skip hidden body when Quill is present)
 document.querySelectorAll('textarea').forEach(ta => {
+  if (ta.style.display === 'none') return;
   ta.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.max(200, this.scrollHeight) + 'px';

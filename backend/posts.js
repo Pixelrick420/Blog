@@ -4,8 +4,13 @@ const TABLE = 'posts';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '');
+}
+
 function computeReadTime(body) {
-  const words = body.trim().split(/\s+/).length;
+  const text = stripHtml(body).trim();
+  const words = text ? text.split(/\s+/).length : 0;
   return `${Math.max(1, Math.ceil(words / 200))} min`;
 }
 
@@ -28,7 +33,7 @@ function formatPost(row) {
 async function getAll() {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*, profiles(display_name)')
+    .select('*, profiles!posts_author_id_fkey(display_name)')
     .order('date', { ascending: false });
 
   if (error) throw error;
@@ -38,7 +43,7 @@ async function getAll() {
 async function getById(id) {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*, profiles(display_name)')
+    .select('*, profiles!posts_author_id_fkey(display_name)')
     .eq('id', id)
     .single();
 
@@ -53,10 +58,10 @@ async function create({ title, category, excerpt, body, authorId }) {
       author_id: authorId || null,
       title: title.trim(),
       category: category?.trim() || 'Uncategorized',
-      excerpt: excerpt?.trim() || body.trim().slice(0, 120) + '…',
+      excerpt: excerpt?.trim() || stripHtml(body).trim().slice(0, 120) + '…',
       body: body.trim(),
     })
-    .select('*, profiles(display_name)')
+    .select('*, profiles!posts_author_id_fkey(display_name)')
     .single();
 
   if (error) throw error;
@@ -69,15 +74,26 @@ async function update(id, { title, category, excerpt, body }) {
     .update({
       title: title.trim(),
       category: category?.trim() || 'Uncategorized',
-      excerpt: excerpt?.trim() || body.trim().slice(0, 120) + '…',
+      excerpt: excerpt?.trim() || stripHtml(body).trim().slice(0, 120) + '…',
       body: body.trim(),
     })
     .eq('id', id)
-    .select('*, profiles(display_name)')
+    .select('*, profiles!posts_author_id_fkey(display_name)')
     .single();
 
   if (error) throw error;
   return formatPost(data);
+}
+
+async function getByAuthor(authorId) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*, profiles!posts_author_id_fkey(display_name)')
+    .eq('author_id', authorId)
+    .order('date', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map(formatPost);
 }
 
 async function remove(id) {
@@ -89,4 +105,4 @@ async function remove(id) {
   if (error) throw error;
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, getByAuthor, create, update, remove };

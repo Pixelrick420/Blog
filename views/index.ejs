@@ -1,64 +1,99 @@
 <%- include('partials/header', { title: 'Index' }) %>
 
 <main class="page-home">
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-meta">
+                <span class="tag">BLCK.BLOG</span>
+                <span class="tag"><%= posts.length %> POSTS</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="line reveal-line">Ideas</span>
+                <span class="line reveal-line delay-1">Worth</span>
+                <span class="line reveal-line delay-2 accent-line"
+                    >Committing<span class="dot">.</span></span
+                >
+            </h1>
+            <p class="hero-sub reveal-fade delay-3">
+                A space for converting your thoughts into rendered text.
+            </p>
+            <a href="/posts/new" class="btn-primary reveal-fade delay-4">
+                Write Something <span>→</span>
+            </a>
+        </div>
+        <div class="hero-rule reveal-fade delay-1"></div>
+    </section>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-meta">
-        <span class="tag">BLCK.BLOG</span>
-        <span class="tag"><%= posts.length %> POSTS</span>
+    <!-- Post Grid -->
+    <section class="posts-section">
+        <div class="section-header">
+            <h2 class="section-title">ALL POSTS</h2>
+            <div class="section-rule"></div>
+        </div>
+
+        <% if (posts.length === 0) { %>
+        <div class="empty-state">
+            <p class="empty-msg">No posts yet.</p>
+            <a href="/posts/new" class="btn-primary">Write the first →</a>
+        </div>
+        <% } else { %>
+
+        <div class="posts-grid">
+            <% posts.forEach((post, i) => { %>
+            <article
+                class="post-card <%= i === 0 ? 'post-card--featured' : '' %>"
+                style="--i: <%= i %>"
+            >
+                <a href="/posts/<%= post.id %>" class="card-link">
+                    <div class="card-top">
+                        <span class="card-cat"><%= post.category %></span>
+                        <span class="card-num"
+                            ><%= String(i + 1).padStart(2, '0') %></span
+                        >
+                    </div>
+                    <h2 class="card-title"><%= post.title %></h2>
+                    <p class="card-excerpt"><%= post.excerpt %></p>
+                    <div class="card-footer">
+                        <span class="card-date"
+                            ><%= formatDate(post.date) %></span
+                        >
+                        <span class="card-read"><%= post.readTime %> read</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+            </article>
+            <% }) %>
+        </div>
+
+        <% } %>
+    </section>
+
+    <% if (recommended.length > 0) { %>
+    <section class="posts-section" style="padding-top:0">
+      <div class="section-header">
+        <h2 class="section-title">RECOMMENDED FOR YOU</h2>
+        <div class="section-rule"></div>
       </div>
-      <h1 class="hero-title">
-        <span class="line reveal-line">Ideas</span>
-        <span class="line reveal-line delay-1">Worth</span>
-        <span class="line reveal-line delay-2 accent-line">Committing<span class="dot">.</span></span>
-      </h1>
-      <p class="hero-sub reveal-fade delay-3">A space for precise thinking. No hedging. No noise. Just signal.</p>
-      <a href="/posts/new" class="btn-primary reveal-fade delay-4">
-        Write Something <span>→</span>
-      </a>
-    </div>
-    <div class="hero-rule reveal-fade delay-1"></div>
-  </section>
-
-  <!-- Post Grid -->
-  <section class="posts-section">
-    <div class="section-header">
-      <h2 class="section-title">ALL POSTS</h2>
-      <div class="section-rule"></div>
-    </div>
-
-    <% if (posts.length === 0) { %>
-      <div class="empty-state">
-        <p class="empty-msg">No posts yet.</p>
-        <a href="/posts/new" class="btn-primary">Write the first →</a>
+      <div class="posts-grid">
+        <% recommended.forEach((post, i) => { %>
+        <article class="post-card" style="--i: <%= i %>">
+          <a href="/posts/<%= post.id %>" class="card-link">
+            <div class="card-top">
+              <span class="card-cat"><%= post.category %></span>
+            </div>
+            <h2 class="card-title"><%= post.title %></h2>
+            <p class="card-excerpt"><%= post.excerpt %></p>
+            <div class="card-footer">
+              <span class="card-read"><%= post.readTime %> read</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </a>
+        </article>
+        <% }) %>
       </div>
-    <% } else { %>
-
-    <div class="posts-grid">
-      <% posts.forEach((post, i) => { %>
-      <article class="post-card <%= i === 0 ? 'post-card--featured' : '' %>" style="--i:<%= i %>">
-        <a href="/posts/<%= post.id %>" class="card-link">
-          <div class="card-top">
-            <span class="card-cat"><%= post.category %></span>
-            <span class="card-num"><%= String(i + 1).padStart(2, '0') %></span>
-          </div>
-          <h2 class="card-title"><%= post.title %></h2>
-          <p class="card-excerpt"><%= post.excerpt %></p>
-          <div class="card-footer">
-            <span class="card-date"><%= formatDate(post.date) %></span>
-            <span class="card-read"><%= post.readTime %> read</span>
-            <span class="card-arrow">→</span>
-          </div>
-        </a>
-      </article>
-      <% }) %>
-    </div>
-
+    </section>
     <% } %>
-  </section>
-
 </main>
 
 <%- include('partials/footer') %>

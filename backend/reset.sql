@@ -15,7 +15,8 @@ DROP FUNCTION IF EXISTS public.update_updated_at();
 -- Drop indexes (automatic with table drop, but explicit for clarity)
 DROP INDEX IF EXISTS idx_posts_date;
 
--- Drop tables (posts first because it references profiles)
+-- Drop tables (order: likes references posts+profiles, posts references profiles)
+DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS profiles;
 

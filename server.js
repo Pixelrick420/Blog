@@ -4,6 +4,8 @@ const path = require('path');
 const session = require('express-session');
 const postsService = require('./backend/posts');
 const auth = require('./backend/auth');
+const likesService = require('./backend/likes');
+const CATEGORIES = require('./backend/categories');
 
 const app = express();
 const PORT = 3000;
@@ -20,9 +22,10 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// Make session user available in all views
+// Make session user and categories available in all views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.categories = CATEGORIES;
   next();
 });
 
@@ -89,7 +92,10 @@ app.post('/auth/logout', (req, res) => {
 app.get('/', async (req, res, next) => {
   try {
     const posts = await postsService.getAll();
-    res.render('index', { posts, formatDate });
+    const recommended = req.session.user
+      ? await likesService.getRecommended(req.session.user.id)
+      : [];
+    res.render('index', { posts, formatDate, recommended });
   } catch (err) { next(err); }
 });
 
@@ -121,10 +127,13 @@ app.get('/posts/:id', async (req, res, next) => {
     const all = await postsService.getAll();
     const others = all.filter(p => p.id !== post.id).slice(0, 2);
     const user = req.session.user;
+    const likeCount = await likesService.getCount(post.id);
+    const userLiked = user ? await likesService.isLiked(post.id, user.id) : false;
     res.render('post', {
       post, others, formatDate,
       canEdit: auth.canEditPost(post, user),
-      canDelete: auth.canDeletePost(user),
+      canDelete: auth.canDeletePost(post, user),
+      likeCount, userLiked,
     });
   } catch (err) { next(err); }
 });
@@ -161,11 +170,37 @@ app.post('/posts/:id/edit', auth.requireAuth, async (req, res, next) => {
 // Delete post
 app.post('/posts/:id/delete', auth.requireAuth, async (req, res, next) => {
   try {
-    if (!auth.canDeletePost(req.session.user)) {
+    const post = await postsService.getById(req.params.id);
+    if (!post) return res.status(404).render('404');
+    if (!auth.canDeletePost(post, req.session.user)) {
       return res.status(403).render('403');
     }
     await postsService.remove(req.params.id);
     res.redirect('/');
+  } catch (err) { next(err); }
+});
+
+// Like / unlike a post
+app.post('/posts/:id/like', auth.requireAuth, async (req, res, next) => {
+  try {
+    const result = await likesService.toggle(req.params.id, req.session.user.id);
+    const count = await likesService.getCount(req.params.id);
+    res.json({ liked: result.liked, count });
+  } catch (err) { next(err); }
+});
+
+// Profile — list posts by a specific author
+app.get('/profile/:id', async (req, res, next) => {
+  try {
+    const profile = await auth.getProfile(req.params.id);
+    if (!profile) return res.status(404).render('404');
+    const posts = await postsService.getByAuthor(req.params.id);
+    const user = req.session.user;
+    res.render('profile', {
+      profile, posts, formatDate,
+      isOwner: user && user.id === profile.id,
+      currentUser: user,
+    });
   } catch (err) { next(err); }
 });
 

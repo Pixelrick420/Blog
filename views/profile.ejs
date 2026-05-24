@@ -1,0 +1,55 @@
+<%- include('partials/header', { title: profile.display_name }) %>
+
+<main class="page-form">
+  <div class="form-header">
+    <a href="/" class="back-link">← Back to Index</a>
+    <h1 class="form-title reveal-line"><%= profile.display_name %><span class="dot">.</span></h1>
+    <p class="form-sub reveal-fade delay-1">
+      <%= posts.length %> post<%= posts.length !== 1 ? 's' : '' %>
+      <% if (profile.role === 'admin') { %><span class="tag" style="margin-left:.75rem;vertical-align:middle">admin</span><% } %>
+      <% if (isOwner) { %>
+        <form action="/auth/logout" method="POST" style="display:inline;margin-left:1rem">
+          <button class="btn-outline" style="padding:.3rem 1rem;font-size:.8rem">Logout</button>
+        </form>
+      <% } %>
+    </p>
+  </div>
+
+  <% if (posts.length === 0) { %>
+    <div class="empty-state reveal-fade delay-2">
+      <p class="empty-msg">No posts yet.</p>
+      <% if (isOwner) { %>
+        <a href="/posts/new" class="btn-primary">Write your first →</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="posts-grid" style="border-top:1px solid var(--border)">
+      <% posts.forEach((post, i) => { %>
+        <article class="post-card post-card--profile" style="--i: <%= i %>">
+          <a href="/posts/<%= post.id %>" class="card-link">
+            <div class="card-top">
+              <span class="card-cat"><%= post.category %></span>
+              <span class="card-num"><%= formatDate(post.date) %></span>
+            </div>
+            <h2 class="card-title"><%= post.title %></h2>
+            <p class="card-excerpt"><%= post.excerpt %></p>
+            <div class="card-footer">
+              <span class="card-read"><%= post.readTime %> read</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </a>
+          <% if (isOwner || currentUser?.role === 'admin') { %>
+            <div class="profile-card-actions">
+              <a href="/posts/<%= post.id %>/edit" class="btn-outline" style="padding:.4rem 1rem;font-size:.8rem">Edit</a>
+              <form action="/posts/<%= post.id %>/delete" method="POST" style="display:inline">
+                <button type="submit" class="btn-danger" style="padding:.4rem 1rem;font-size:.8rem" onclick="return confirm('Delete this post?')">Delete</button>
+              </form>
+            </div>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

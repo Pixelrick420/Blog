@@ -10,7 +10,7 @@
         <span class="tag"><%= post.readTime %> read</span>
         <span class="tag"><%= formatDate(post.date) %></span>
         <% if (post.author_name) { %>
-          <span class="tag">by <%= post.author_name %></span>
+          <span class="tag">by <% if (post.author_id) { %><a href="/profile/<%= post.author_id %>" style="color:inherit"><%= post.author_name %></a><% } else { %><%= post.author_name %><% } %></span>
         <% } %>
       </div>
       <h1 class="post-title reveal-line"><%= post.title %></h1>
@@ -55,11 +55,35 @@
 
     <article class="post-body-wrap">
       <div class="post-body">
-        <% post.body.split('\n').forEach(para => { %>
-          <% if (para.trim()) { %>
-            <p><%= para %></p>
-          <% } %>
-        <% }) %>
+        <% if (post.body.includes('<')) { %>
+          <%- post.body %>
+        <% } else { %>
+          <% post.body.split('\n').forEach(para => { %>
+            <% if (para.trim()) { %>
+              <p><%= para %></p>
+            <% } %>
+          <% }) %>
+        <% } %>
+      </div>
+
+      <div class="post-actions-bar">
+        <% const pixelHeart = [0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,0,0,1,0,0] %>
+        <% if (typeof user !== 'undefined' && user) { %>
+          <button class="like-btn" data-post-id="<%= post.id %>">
+            <span class="pixel-heart">
+              <% pixelHeart.forEach((v,i) => { %><span class="pixel<%= v ? '' : ' empty' %><%= v && userLiked ? ' on' : '' %>"></span><% }) %>
+            </span>
+            <span class="like-count"><%= likeCount %></span>
+          </button>
+        <% } else { %>
+          <a href="/auth/signup" class="like-link">
+            <span class="pixel-heart">
+              <% pixelHeart.forEach((v,i) => { %><span class="pixel<%= v ? '' : ' empty' %>"></span><% }) %>
+            </span>
+            <span class="like-count"><%= likeCount %></span>
+          </a>
+        <% } %>
+        <button class="share-btn" data-id="<%= post.id %>">Share</button>
       </div>
     </article>
   </div>

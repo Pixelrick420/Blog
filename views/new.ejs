@@ -19,7 +19,10 @@
       </div>
       <div class="form-group">
         <label for="category" class="form-label">Category</label>
-        <input type="text" id="category" name="category" class="form-input" placeholder="Design, Strategy…" autocomplete="off" />
+        <input type="text" id="category" name="category" class="form-input" placeholder="Type to search categories…" list="catList" autocomplete="off" />
+        <datalist id="catList">
+          <% categories.forEach(c => { %><option value="<%= c %>"><% }) %>
+        </datalist>
       </div>
     </div>
 
@@ -30,7 +33,8 @@
 
     <div class="form-group">
       <label for="body" class="form-label">Body <span class="required">*</span></label>
-      <textarea id="body" name="body" class="form-textarea" placeholder="Write with conviction. Paragraph breaks = line breaks." rows="14" required></textarea>
+      <textarea id="body" name="body" style="display:none"></textarea>
+      <div id="editor-container"></div>
       <div class="word-count-row">
         <span id="wordCount" class="word-count">0 words</span>
         <span id="readTimeEst" class="word-count">~ 0 min read</span>

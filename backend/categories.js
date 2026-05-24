@@ -1,0 +1,33 @@
+// Canonical category list curated from Medium, Substack, and Ghost best practices
+const CATEGORIES = [
+  'Technology',
+  'Design',
+  'Writing',
+  'Productivity',
+  'Self Improvement',
+  'Business',
+  'Science',
+  'Culture',
+  'Art',
+  'Philosophy',
+  'Health & Wellness',
+  'Books & Literature',
+  'Film & TV',
+  'Music',
+  'Photography',
+  'Travel',
+  'Food & Drink',
+  'Education',
+  'History',
+  'Politics',
+  'Finance',
+  'Fiction',
+  'Poetry',
+  'Sports',
+  'Nature & Environment',
+  'Fashion & Beauty',
+  'Gaming',
+  'Entrepreneurship',
+];
+
+module.exports = CATEGORIES;
