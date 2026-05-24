@@ -73,7 +73,6 @@ SESSION_SECRET=a-long-random-string
 Run `backend/master.sql` in your Supabase SQL Editor to create the schema. Then:
 
 ```bash
-node backend/seed.js   # optional: test user + 10 sample posts
 npm start              # → http://localhost:3000
 ```
 
