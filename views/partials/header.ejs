@@ -32,7 +32,6 @@
     </button>
   </div>
   <div class="mobile-nav" id="mobileNav">
-    <a href="/" class="mobile-link">Index</a>
     <a href="/posts/new" class="mobile-link">Write</a>
     <% if (typeof user !== 'undefined' && user) { %>
       <a href="/profile/<%= user.id %>" class="mobile-link"><%= user.displayName %><% if (user.role === 'admin') { %> (admin)<% } %></a>
