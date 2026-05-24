@@ -132,12 +132,4 @@ Fonts:   Bebas Neue (display) · Barlow Condensed (nav) · Barlow (body)
   <em>Post view — sidebar, rich-text body, pixel heart, share.</em>
 </p>
 
-<p align="center">
-  <img src="./screenshots/new-post.png" alt="New post" width="700" />
-  <em>New post — Quill editor, category autocomplete.</em>
-</p>
 
-<p align="center">
-  <img src="./screenshots/profile.png" alt="Profile" width="700" />
-  <em>Profile — post grid, edit/delete, logout.</em>
-</p>
