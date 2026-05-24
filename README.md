@@ -35,7 +35,7 @@
 
 ### Liking & Sharing
 
-- Click the **pixel heart** (▦) below a post to toggle the like
+- Click the **heart** below a post to toggle the like
 - Click **Share** to use the system share sheet (copies URL to clipboard as fallback)
 
 ### Recommendations
