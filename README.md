@@ -1,21 +1,20 @@
 # BLCK.BLOG
 
-> **Ideas Worth Committing.** — A dark-mode blog engine with Quill WYSIWYG editing, Supabase auth, and pixel-perfect typography.
+> A dark-mode blog engine. Quill WYSIWYG, Supabase Auth + PostgreSQL, Express 5 session auth, server-rendered EJS.
 
 ---
 
 ## Features
 
-- Rich-text editing (Quill) — bold, italic, headings, lists, blockquotes, alignment, links
-- Sign-up / sign-in via Supabase Auth
-- Category autocomplete — 28 curated categories
-- Create, edit, delete posts with auto-generated excerpts and read-time estimates
-- Pixel heart likes — 5×5 pixel-art toggle, real-time count
-- Share — native `navigator.share()` with clipboard fallback
-- Smart recommendations — suggests posts in categories you've liked
-- Author profiles — `/profile/:id` with post grid; edit/delete for own posts
-- Related posts — "Continue Reading" on each post
-- Mobile responsive — hamburger nav, fluid layout
+- Rich-text editing via Quill 1.3.7 (bold, italic, headings, lists, blockquotes, links)
+- Sign-up/sign-in via Supabase Auth with Express session persistence
+- Category autocomplete from 28 curated categories
+- CRUD posts with auto-generated excerpts (first 120 chars) and read-time estimates (200 wpm)
+- Likes and Share via `navigator.share()` with clipboard URL fallback
+- Recommendation engine: queries posts in categories the user has liked
+- Author profiles at `/profile/:id` with post grid and owner edit/delete
+- Related posts section below each post
+- Mobile responsive with hamburger nav
 
 ---
 
@@ -25,23 +24,23 @@
 
 1. Click **Write** in the nav (or "Write Something" on the home page)
 2. Enter a **title** and optional **category** (start typing to autocomplete from 28 curated categories)
-3. Add an **excerpt** (or leave blank — one is auto-generated from the body)
-4. Use the **Quill editor** to format your body text — toolbar has bold, italic, underline, strike, headings, ordered/bullet lists, alignment, blockquote, link, and clean button
+3. Add an **excerpt** (leave blank for auto-generation from body)
+4. Use the **Quill editor** to format your body text (toolbar: bold, italic, underline, strike, headings, lists, alignment, blockquote, link, clean)
 5. Click **Publish Post**
 
 ### Editing & Deleting
 
-- Visit your **profile page** (click your name in the nav) — every post you own has Edit and Delete buttons
+- Visit your **profile page** (click your name in the nav) to see Edit and Delete buttons on your posts
 - On a **post page**, if you're the author (or an admin), Edit and Delete appear in the sidebar
 
 ### Liking & Sharing
 
-- Click the **pixel heart** (▦) below a post to like it — toggles red fill
+- Click the **pixel heart** (▦) below a post to toggle the like
 - Click **Share** to use the system share sheet (copies URL to clipboard as fallback)
 
 ### Recommendations
 
-- Once you've liked a few posts, the home page shows a **Recommended for You** section — posts in categories you've engaged with
+- Once you have liked a few posts, the home page shows a **Recommended for You** section with posts in categories you have engaged with
 
 ### Profile & Logout
 
@@ -52,7 +51,7 @@
 
 ## Tech Stack
 
-Node.js / Express 5 · EJS · Supabase (PostgreSQL + Auth) · Quill.js 1.3.7 · Vanilla CSS
+Node.js / Express 5 · EJS templates · Supabase (PostgreSQL + Auth) · Quill.js 1.3.7 · server-side sessions · vanilla CSS
 
 ---
 
@@ -86,16 +85,16 @@ Deploy to Vercel by importing the repo and setting the same env vars.
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET/POST | `/auth/login` | — | Login |
-| GET/POST | `/auth/signup` | — | Sign up |
-| POST | `/auth/logout` | — | Logout |
-| GET | `/` | — | Home |
+| GET/POST | `/auth/login` | No | Login |
+| GET/POST | `/auth/signup` | No | Sign up |
+| POST | `/auth/logout` | No | Logout |
+| GET | `/` | No | Home |
 | GET/POST | `/posts/new` | Required | Create post |
 | GET/POST | `/posts/:id/edit` | Owner | Edit post |
 | POST | `/posts/:id/delete` | Owner | Delete post |
 | POST | `/posts/:id/like` | Required | Toggle like |
-| GET | `/posts/:id` | — | View post |
-| GET | `/profile/:id` | — | Author profile |
+| GET | `/posts/:id` | No | View post |
+| GET | `/profile/:id` | No | Author profile |
 
 ---
 
@@ -105,7 +104,7 @@ Deploy to Vercel by importing the repo and setting the same env vars.
 backend/          auth.js, posts.js, likes.js, categories.js, master.sql, seed.js
 public/           css/style.css, js/main.js, favicon.svg
 views/            EJS templates (index, post, new, edit, profile, auth/*, partials/*)
-server.js         Express app — routes, middleware, session
+server.js         Express 5 app - routes, middleware, sessions
 ```
 
 ---
