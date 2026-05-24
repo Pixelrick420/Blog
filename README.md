@@ -124,12 +124,8 @@ Fonts:   Bebas Neue (display) · Barlow Condensed (nav) · Barlow (body)
 
 <p align="center">
   <img src="./screenshots/home.png" alt="Home" width="700" />
-  <em>Home page — hero, post grid, recommendations.</em>
 </p>
 
 <p align="center">
   <img src="./screenshots/post.png" alt="Post" width="700" />
-  <em>Post view — sidebar, rich-text body, pixel heart, share.</em>
 </p>
-
-
