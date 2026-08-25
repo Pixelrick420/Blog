@@ -858,6 +858,33 @@ main {
     font-size: 0.8rem;
     flex-shrink: 0;
 }
+.backend-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #1a0f00;
+    border: 1px solid #cc8800;
+    color: #ffbb33;
+    padding: 0.85rem 1.25rem;
+    font-family: var(--font-cond);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0 var(--gutter);
+    margin-top: 1rem;
+}
+.backend-banner-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #cc8800;
+    color: var(--black);
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
 .post-form {
     display: flex;
     flex-direction: column;

@@ -37,6 +37,10 @@ function formatDate(iso) {
   });
 }
 
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '');
+}
+
 // ─── Auth Routes ────────────────────────────────────────────────────────────────
 
 // Login form
@@ -90,14 +94,22 @@ app.post('/auth/logout', (req, res) => {
 // ─── Blog Routes ────────────────────────────────────────────────────────────────
 
 // Home — all posts
-app.get('/', async (req, res, next) => {
+app.get('/', async (req, res) => {
+  let posts = [];
+  let recommended = [];
+  let warning = null;
   try {
-    const posts = await postsService.getAll();
-    const recommended = req.session.user
-      ? await likesService.getRecommended(req.session.user.id)
-      : [];
-    res.render('index', { posts, formatDate, recommended });
-  } catch (err) { next(err); }
+    posts = await postsService.getAll();
+  } catch (err) {
+    console.error('Failed to load posts:', err.message);
+    warning = 'Unable to load posts — backend may be unavailable.';
+  }
+  try {
+    if (req.session.user) {
+      recommended = await likesService.getRecommended(req.session.user.id);
+    }
+  } catch (_) {}
+  res.render('index', { posts, formatDate, recommended, warning });
 });
 
 // New post form
@@ -106,79 +118,133 @@ app.get('/posts/new', auth.requireAuth, (req, res) => {
 });
 
 // Create post
-app.post('/posts', auth.requireAuth, async (req, res, next) => {
+app.post('/posts', auth.requireAuth, async (req, res) => {
+  const { title, category, excerpt, body } = req.body;
+  if (!title?.trim() || !body?.trim()) {
+    return res.render('new', { error: 'Title and body are required.', warning: null });
+  }
   try {
-    const { title, category, excerpt, body } = req.body;
-    if (!title?.trim() || !body?.trim()) {
-      return res.render('new', { error: 'Title and body are required.' });
-    }
     const post = await postsService.create({
       title, category, excerpt, body,
       authorId: req.session.user.id,
     });
-    res.redirect(`/posts/${post.id}`);
-  } catch (err) { next(err); }
+    return res.redirect(`/posts/${post.id}`);
+  } catch (err) {
+    console.error('Failed to save post:', err.message);
+    const post = {
+      id: 'unsaved-' + Date.now(),
+      author_id: req.session.user.id,
+      author_name: req.session.user.displayName || null,
+      title: title.trim(),
+      category: category?.trim() || 'Uncategorized',
+      excerpt: excerpt?.trim() || stripHtml(body).trim().slice(0, 120) + '…',
+      body: body.trim(),
+      date: new Date().toISOString(),
+      readTime: `${Math.max(1, Math.ceil(stripHtml(body).trim().split(/\s+/).length / 200))} min`,
+    };
+    return res.render('post', {
+      post, others: [], formatDate,
+      canEdit: false, canDelete: false,
+      likeCount: 0, userLiked: false,
+      warning: 'Failed to save — your post is displayed locally but not persisted.',
+    });
+  }
 });
 
 // View single post
-app.get('/posts/:id', async (req, res, next) => {
+app.get('/posts/:id', async (req, res) => {
+  let post;
   try {
-    const post = await postsService.getById(req.params.id);
-    if (!post) return res.status(404).render('404');
+    post = await postsService.getById(req.params.id);
+  } catch (err) {
+    console.error('Failed to load post:', err.message);
+    return res.status(503).render('404', { warning: 'Unable to load post — backend may be unavailable.' });
+  }
+  if (!post) return res.status(404).render('404', { warning: null });
+  let others = [];
+  let likeCount = 0;
+  let userLiked = false;
+  try {
     const all = await postsService.getAll();
-    const others = all.filter(p => p.id !== post.id).slice(0, 2);
-    const user = req.session.user;
-    const likeCount = await likesService.getCount(post.id);
-    const userLiked = user ? await likesService.isLiked(post.id, user.id) : false;
-    res.render('post', {
-      post, others, formatDate,
-      canEdit: auth.canEditPost(post, user),
-      canDelete: auth.canDeletePost(post, user),
-      likeCount, userLiked,
-    });
-  } catch (err) { next(err); }
+    others = all.filter(p => p.id !== post.id).slice(0, 2);
+  } catch (_) {}
+  try {
+    likeCount = await likesService.getCount(post.id);
+  } catch (_) {}
+  const user = req.session.user;
+  try {
+    if (user) userLiked = await likesService.isLiked(post.id, user.id);
+  } catch (_) {}
+  res.render('post', {
+    post, others, formatDate,
+    canEdit: auth.canEditPost(post, user),
+    canDelete: auth.canDeletePost(post, user),
+    likeCount, userLiked,
+  });
 });
 
 // Edit form
-app.get('/posts/:id/edit', auth.requireAuth, async (req, res, next) => {
+app.get('/posts/:id/edit', auth.requireAuth, async (req, res) => {
+  let post;
   try {
-    const post = await postsService.getById(req.params.id);
-    if (!post) return res.status(404).render('404');
-    if (!auth.canEditPost(post, req.session.user)) {
-      return res.status(403).render('403');
-    }
-    res.render('edit', { post, error: null });
-  } catch (err) { next(err); }
+    post = await postsService.getById(req.params.id);
+  } catch (err) {
+    console.error('Failed to load post for edit:', err.message);
+    return res.status(503).render('404', { warning: 'Unable to load post — backend may be unavailable.' });
+  }
+  if (!post) return res.status(404).render('404', { warning: null });
+  if (!auth.canEditPost(post, req.session.user)) {
+    return res.status(403).render('403');
+  }
+  res.render('edit', { post, error: null });
 });
 
 // Update post
-app.post('/posts/:id/edit', auth.requireAuth, async (req, res, next) => {
+app.post('/posts/:id/edit', auth.requireAuth, async (req, res) => {
+  let post;
   try {
-    const post = await postsService.getById(req.params.id);
-    if (!post) return res.status(404).render('404');
-    if (!auth.canEditPost(post, req.session.user)) {
-      return res.status(403).render('403');
-    }
-    const { title, category, excerpt, body } = req.body;
-    if (!title?.trim() || !body?.trim()) {
-      return res.render('edit', { post, error: 'Title and body are required.' });
-    }
+    post = await postsService.getById(req.params.id);
+  } catch (err) {
+    console.error('Failed to load post for update:', err.message);
+    return res.status(503).render('404', { warning: 'Unable to load post — backend may be unavailable.' });
+  }
+  if (!post) return res.status(404).render('404', { warning: null });
+  if (!auth.canEditPost(post, req.session.user)) {
+    return res.status(403).render('403');
+  }
+  const { title, category, excerpt, body } = req.body;
+  if (!title?.trim() || !body?.trim()) {
+    return res.render('edit', { post, error: 'Title and body are required.' });
+  }
+  try {
     await postsService.update(req.params.id, { title, category, excerpt, body });
     res.redirect(`/posts/${req.params.id}`);
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error('Failed to update post:', err.message);
+    return res.status(503).render('404', { warning: 'Failed to save changes — backend may be unavailable.' });
+  }
 });
 
 // Delete post
-app.post('/posts/:id/delete', auth.requireAuth, async (req, res, next) => {
+app.post('/posts/:id/delete', auth.requireAuth, async (req, res) => {
+  let post;
   try {
-    const post = await postsService.getById(req.params.id);
-    if (!post) return res.status(404).render('404');
-    if (!auth.canDeletePost(post, req.session.user)) {
-      return res.status(403).render('403');
-    }
+    post = await postsService.getById(req.params.id);
+  } catch (err) {
+    console.error('Failed to load post for delete:', err.message);
+    return res.status(503).render('404', { warning: 'Unable to load post — backend may be unavailable.' });
+  }
+  if (!post) return res.status(404).render('404', { warning: null });
+  if (!auth.canDeletePost(post, req.session.user)) {
+    return res.status(403).render('403');
+  }
+  try {
     await postsService.remove(req.params.id);
     res.redirect('/');
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error('Failed to delete post:', err.message);
+    return res.status(503).render('404', { warning: 'Failed to delete — backend may be unavailable.' });
+  }
 });
 
 // Like / unlike a post
@@ -191,27 +257,38 @@ app.post('/posts/:id/like', auth.requireAuth, async (req, res, next) => {
 });
 
 // Profile — list posts by a specific author
-app.get('/profile/:id', async (req, res, next) => {
+app.get('/profile/:id', async (req, res) => {
+  let profile;
   try {
-    const profile = await auth.getProfile(req.params.id);
-    if (!profile) return res.status(404).render('404');
-    const posts = await postsService.getByAuthor(req.params.id);
-    const user = req.session.user;
-    res.render('profile', {
-      profile, posts, formatDate,
-      isOwner: user && user.id === profile.id,
-      currentUser: user,
-    });
-  } catch (err) { next(err); }
+    profile = await auth.getProfile(req.params.id);
+  } catch (err) {
+    console.error('Failed to load profile:', err.message);
+    return res.status(503).render('404', { warning: 'Unable to load profile — backend may be unavailable.' });
+  }
+  if (!profile) return res.status(404).render('404', { warning: null });
+  let posts = [];
+  let warning = null;
+  try {
+    posts = await postsService.getByAuthor(req.params.id);
+  } catch (err) {
+    console.error('Failed to load author posts:', err.message);
+    warning = 'Unable to load posts — backend may be unavailable.';
+  }
+  const user = req.session.user;
+  res.render('profile', {
+    profile, posts, formatDate, warning,
+    isOwner: user && user.id === profile.id,
+    currentUser: user,
+  });
 });
 
 // 404 fallback
-app.use((req, res) => res.status(404).render('404'));
+app.use((req, res) => res.status(404).render('404', { warning: null }));
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send('Something went wrong.');
+  res.status(500).render('404', { warning: 'Something went wrong — the server encountered an error.' });
 });
 
 app.listen(PORT, () => console.log(`BLCK.BLOG running → http://localhost:${PORT}`));
