@@ -1,6 +1,6 @@
 # BLCK.BLOG
 
-> A dark-mode blog engine. Quill WYSIWYG, Supabase Auth + PostgreSQL, Express 5 session auth, server-rendered EJS.
+> The backend has been stopped due to inactivity. I might come back to this project in the future but for now, it goes into sleep mode.
 
 ---
 
